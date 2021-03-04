@@ -86,6 +86,9 @@ func getEXIF(filename, key string) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("exiftool failed: %w", err)
 	}
+	if len(out) < 2 {
+		return nil, fmt.Errorf("key empty")
+	}
 	return out[1 : len(out)-1], nil
 }
 
@@ -172,7 +175,7 @@ func verify(filename string) error {
 		return err
 	}
 
-	if rsa.VerifyPKCS1v15(key, crypto.SHA512, digest, metadata.Signature); err != nil {
+	if err := rsa.VerifyPKCS1v15(key, crypto.SHA512, digest, metadata.Signature); err != nil {
 		return fmt.Errorf("validation failed: %w", err)
 	}
 
