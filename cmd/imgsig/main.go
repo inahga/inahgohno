@@ -111,31 +111,30 @@ func getRSAKey(filename string) (*rsa.PrivateKey, []byte, error) {
 }
 
 func sign(filename, rsaPath string) error {
-	key, _, err := getRSAKey(rsaPath)
+	digest, err := getImageDigest(filename)
 	if err != nil {
 		return err
 	}
-
-	digest, err := getImageDigest(filename)
+	key, _, err := getRSAKey(rsaPath)
 	if err != nil {
 		return err
 	}
 
 	encrypted, err := rsa.SignPKCS1v15(rand.Reader, key, crypto.SHA512, digest)
 	if err != nil {
-		return nil
+		return err
 	}
 
 	publicKey, err := x509.MarshalPKIXPublicKey(&key.PublicKey)
 	if err != nil {
-		return nil
+		return err
 	}
 	metadata, err := json.Marshal(Metadata{
 		PublicKey: publicKey,
 		Signature: encrypted,
 	})
 	if err != nil {
-		return nil
+		return err
 	}
 
 	return writeEXIF(filename, EXIFComment, string(metadata))
@@ -151,7 +150,7 @@ func formatFingerprint(f string) string {
 func verify(filename string) error {
 	comment, err := getEXIF(filename, EXIFComment)
 	if err != nil {
-		return nil
+		return err
 	}
 
 	var metadata Metadata
@@ -161,7 +160,7 @@ func verify(filename string) error {
 
 	pkix, err := x509.ParsePKIXPublicKey(metadata.PublicKey)
 	if err != nil {
-		return nil
+		return err
 	}
 	key, ok := pkix.(*rsa.PublicKey)
 	if !ok {
@@ -170,7 +169,7 @@ func verify(filename string) error {
 
 	digest, err := getImageDigest(filename)
 	if err != nil {
-		return nil
+		return err
 	}
 
 	if rsa.VerifyPKCS1v15(key, crypto.SHA512, digest, metadata.Signature); err != nil {
