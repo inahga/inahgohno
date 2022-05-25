@@ -4,7 +4,7 @@
 
 extern void gocallback();
 
-void* handle_thread(void* arg)
+static void* run_thread(void* arg)
 {
     for (;;) {
         gocallback();
@@ -13,14 +13,7 @@ void* handle_thread(void* arg)
     return NULL;
 }
 
-int run_thread()
+int create_thread(pthread_t* thread)
 {
-    int err;
-    pthread_t thread;
-
-    if ((err = pthread_create(&thread, NULL, handle_thread, NULL)) != 0) {
-        return err;
-    }
-    printf("thread created\n");
-    return 0;
+    return pthread_create(thread, NULL, run_thread, NULL);
 }

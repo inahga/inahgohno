@@ -1,7 +1,9 @@
 package main
 
 // #cgo LDFLAGS: -lpthread
-// int run_thread();
+// #include <pthread.h>
+//
+// int create_thread(pthread_t *);
 import "C"
 import "fmt"
 
@@ -11,8 +13,10 @@ func gocallback() {
 }
 
 func main() {
-	if err := C.run_thread(); err != 0 {
+	var thread C.pthread_t
+	if err := C.create_thread(&thread); err != 0 {
 		panic(err)
 	}
+	fmt.Println(thread)
 	<-make(chan struct{})
 }
